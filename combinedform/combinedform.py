@@ -9,10 +9,7 @@ from django.db.models import ForeignKey
 from django import utils
 
 
-# TODO: switch from BaseException to Exception
-
-
-class SubformError(BaseException):
+class SubformError(Exception):
     """An error occured when interacting with a subform."""
     pass
 
@@ -264,7 +261,7 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
             try:
                 form_inst = form_factory(*args, **kw)
                 setattr(self, subform_name, form_inst)
-            except BaseException as e:
+            except Exception as e:
                 msg = ("Error creating {name} with args {args} and kwargs "
                        "{kwargs}: {msg}")
                 error = msg.format(name=subform_name, args=args, kwargs=kw,
@@ -392,7 +389,7 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
             try:
                 if not form.is_valid():
                     return False
-            except BaseException as exc:
+            except Exception as exc:
                 msg = "Error validating {name}: {msg}".format(name=formname,
                                                               msg=str(exc))
                 raise SubformError(msg).with_traceback(sys.exc_info()[2])
