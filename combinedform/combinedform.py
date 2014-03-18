@@ -349,6 +349,19 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
         return True
 
     @property
+    def cleaned_data(self):
+        """Get a flat dictionary of all cleaned values.
+
+        Raises an exception if the formset is not valid.
+
+        """
+        combined_data = {}
+        for subform_name in self:
+            combined_data.update(self[subform_name].cleaned_data)
+        return combined_data
+
+
+    @property
     def non_field_errors(self):
         """Get all non-field errors on all subforms and the CombinedForm.
 

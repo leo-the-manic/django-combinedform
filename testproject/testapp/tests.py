@@ -1,4 +1,5 @@
 """Tests for the CombinedForm utilitiy class."""
+import datetime
 import unittest
 from unittest import mock
 
@@ -232,6 +233,36 @@ class CombinedFormTest(unittest.TestCase):
             form1 = combinedform.Subform(subform)
 
         self.assertEqual(Combined().non_field_errors, ['foo'])
+
+    def test_provides_combined_cleaned_data(self):
+        """Provides a combined cleaned data attribute."""
+        RadioSelect = django.forms.RadioSelect
+
+        class YesNoForm(django.forms.Form):
+            val = django.forms.TypedChoiceField(((True, 'Yes'), (False, 'No')),
+                                                coerce=lambda v: v == 'Yes',
+                                                widget=RadioSelect)
+
+        class MyForm(combinedform.CombinedForm):
+            yesno = combinedform.Subform(YesNoForm, prefix='yesno')
+
+        f = MyForm({'yesno-val': 'Yes'})
+        self.assertTrue(f.is_valid(), f.errors)
+        self.assertEqual({'yesno-val': True}, f.cleaned_data)
+
+        class TimeForm(django.forms.Form):
+            time = django.forms.DateTimeField()
+
+        class MyForm2(combinedform.CombinedForm):
+            event = combinedform.Subform(TimeForm, prefix='event')
+
+        f = MyForm2({'event-time': '4/5/2010 3:30'})
+        self.assertTrue(f.is_valid(), f.errors)
+        expected_data = {
+            'event-time': datetime.datetime(year=2010, month=5, day=4, hour=3,
+                                            minute=30)
+        }
+        self.assertEqual(expected_data, f.cleaned_data)
 
     def test_non_field_errors_gets_formsets(self):
         """non_field_errors can handle formsets."""
