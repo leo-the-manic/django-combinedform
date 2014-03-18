@@ -11,6 +11,8 @@ setuptools.setup(
     install_requires=['django'],
     license="LGPL3",
     long_description=read_file("README.rst"),
+    maintainer_email="manicleo@gmail.com",
+    maintainer_name="leo-the-manic",
     name="django-combinedforms",
     packages=['combinedform'],
     url="https://github.com/leo-the-manic/django-combinedform",
