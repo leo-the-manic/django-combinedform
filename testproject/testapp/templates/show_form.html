@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>Test page</h1>
+        <p> {{ message }}</p>
+        <h2>Form</h2>
+        <form action="{% url 'form_test' %}" method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit">
+        </form>
+    </body>
+</html>
