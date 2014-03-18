@@ -9,9 +9,34 @@ from django.db.models import ForeignKey
 from django import utils
 
 
+# TODO: switch from BaseException to Exception
+
+
 class SubformError(BaseException):
     """An error occured when interacting with a subform."""
     pass
+
+
+class FieldValidationError(Exception):
+    """A validation error that is attached to a single field."""
+
+    # TODO: look up modern 'Django error' mechanism, probably using
+    # 'error_msg' is an antipattern
+    def __init__(self, form_name, error_dict):
+        """Signal an error related to a specific form field.
+
+        :type  form_name: str
+        :param form_name:
+            The name of the form containing the problematic fields.
+
+        :type  error_dict: dict
+        :param error_dict:
+            A field name to error message map. Each field name must match a
+            field that exists on the form named by ``form_name``.
+
+        """
+        self.form_name = form_name
+        self.error_dict = error_dict
 
 
 class Subform(object):
@@ -124,6 +149,29 @@ def extract_subform_args(raw_kwargs, subform_names):
     return dict(subform_args)
 
 
+# copied from recent Django source on Github
+def add_error(form, error):
+    """
+    Update the content of `form._errors`.
+
+    The `error` is a dictionary that maps field names to lists of errors. What
+    we define as an "error" can be either a simple string or an instance of
+    ValidationError with its message attribute set and what we define as
+    list or dictionary can be an actual `list` or `dict` or an instance
+    of ValidationError with its `error_list` or `error_dict` attribute set.
+
+    """
+    for field, error_list in error.items():
+        if field not in form.errors:
+            if field not in form.fields:
+                raise ValueError(
+                    "'%s' has no field named '%s'." % (form.__class__.__name__, field))
+            form._errors[field] = form.error_class()
+        form._errors[field].extend(error_list)
+        if field in form.cleaned_data:
+            del form.cleaned_data[field]
+
+
 class CombinedForm(object, metaclass=CombinedFormMetaclass):
     """A class which combines multiple forms.
 
@@ -167,6 +215,14 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
         A string, naming an attribute which is a :py:class:`Subform`. With this
         set, :py:meth:`save` will return what it got from the named subform,
         instead of its default behavior.
+
+    ``validators``
+
+        A set of callables which should take only one argument, being the
+        formset at time of validation. A validator can raise a Django
+        ``ValidationError`` to signal a formset-wide problem, or it can raise
+        a :class:`combinedform.FieldValidationError` to highlight a particular
+        field in a particular subform.
 
     """
 
@@ -289,6 +345,9 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
                     raise
             except ValidationError as e:
                 self._errors.extend(e.messages)
+                return False
+            except FieldValidationError as exc:
+                add_error(self[exc.form_name], exc.error_dict)
                 return False
         return True
 

@@ -1,8 +1,22 @@
-from .combinedform import (SubformError, Subform, CombinedFormMetaclass,
-                           extract_subform_args, CombinedForm,
-                           get_model_dependencies, order_by_dependency)
+from .combinedform import (
+    CombinedForm,
+    CombinedFormMetaclass,
+    FieldValidationError,
+    Subform,
+    SubformError,
+    extract_subform_args,
+    get_model_dependencies,
+    order_by_dependency,
+)
 
 
-__all__ = ['SubformError', 'Subform', 'CombinedFormMetaclass',
-           'extract_subform_args', 'CombinedForm', 'get_model_dependencies',
-           'order_by_dependency']
+__all__ = [
+    'CombinedForm',
+    'CombinedFormMetaclass',
+    'FieldValidationError',
+    'Subform',
+    'SubformError',
+    'extract_subform_args',
+    'get_model_dependencies',
+    'order_by_dependency',
+]

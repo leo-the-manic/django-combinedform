@@ -72,6 +72,29 @@ class CombinedFormTest(unittest.TestCase):
                            'form2': {'bar_field': 'Not enough foos'}}
         self.assertEqual(c.errors, expected_errors)
 
+    def test_errors_go_to_subform(self):
+        """combinedform errors can be assigned to subform fields."""
+
+        def my_validator(form):
+            raise combinedform.FieldValidationError('my_form',
+                                                    {'my_field': ['foo']})
+
+        class MyForm(django.forms.Form):
+            my_field = django.forms.CharField(required=False)
+
+        class MyCombinedForm(combinedform.CombinedForm):
+            my_form = combinedform.Subform(MyForm)
+
+            validators = (my_validator,)
+
+        # ensure the subform alone is valid
+        subform = MyForm({})
+        self.assertTrue(subform.is_valid())
+
+        form = MyCombinedForm({})
+        self.assertFalse(form.is_valid())
+        self.assertEqual(['foo'], form.my_form.errors['my_field'])
+
     def test_combinedform_validators_called(self):
         """Validators for the completed formset get called."""
         validate_stuff = mock.MagicMock()
