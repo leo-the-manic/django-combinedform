@@ -65,6 +65,10 @@ class Subform(object):
         kwargs.update(self.kwargs)
         return self.formclass(*formargs, **kwargs)
 
+    @property
+    def prefix(self):
+        return self.kwargs['prefix']
+
 
 class CombinedFormMetaclass(type):
     """Allow a declarative style of CombinedForm generation."""
@@ -350,16 +354,30 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
 
     @property
     def cleaned_data(self):
-        """Get a flat dictionary of all cleaned values.
+        """Get a dictionary of cleaned values from all subforms.
+
+        Values get prefixed with the subform's prefix and a '-'. This is
+        different than a standard Django form, which returns all values
+        without any prefixes.
 
         Raises an exception if the formset is not valid.
 
         """
         combined_data = {}
         for subform_name in self:
-            combined_data.update(self[subform_name].cleaned_data)
-        return combined_data
 
+            # cleaned data from subforms come back without any prefix, so
+            # manually reattach
+            subform_data = self[subform_name].cleaned_data
+            subform_prefix = getattr(type(self), subform_name).prefix
+
+            def prefixed(s):
+                return subform_prefix + "-" + s
+
+            prefixed_data = {prefixed(k): v for k, v in subform_data.items()}
+            combined_data.update(prefixed_data)
+
+        return combined_data
 
     @property
     def non_field_errors(self):
