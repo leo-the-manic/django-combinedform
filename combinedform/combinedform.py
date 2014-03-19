@@ -166,7 +166,8 @@ def add_error(form, error):
         if field not in form.errors:
             if field not in form.fields:
                 raise ValueError(
-                    "'%s' has no field named '%s'." % (form.__class__.__name__, field))
+                    "'%s' has no field named '%s'." % (form.__class__.__name__,
+                                                       field))
             form._errors[field] = form.error_class()
         form._errors[field].extend(error_list)
         if field in form.cleaned_data:
@@ -309,6 +310,7 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
     def __unicode__(self):
         """Show all subforms with markup."""
         return self.as_p()
+
     def as_p(self):
         """Return all subforms as_p combined."""
         all_forms = ''.join(form.as_p() for form in list(self.values()))
@@ -555,7 +557,10 @@ def order_by_dependency(models):
         def __unicode__(self):
             mname = self.model.__name__
             dstr = ", ".join(d.model.__name__ for d in self.dependents)
-            if not dstr: dstr = '[]'
+
+            if not dstr:
+                dstr = '[]'
+
             return "Node(model={}, dependents={})".format(mname, dstr)
 
         def __str__(self):
@@ -569,6 +574,7 @@ def order_by_dependency(models):
         return (f for f in m._meta.fields if isinstance(f, ForeignKey))
 
     nodemap = {}
+
     def get_nodemap(key):
         """Get value at key, or if it doesn't exist create an empty Node."""
         val = nodemap.get(key, Node(key))
