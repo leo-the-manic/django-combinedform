@@ -1,12 +1,12 @@
 """Tests for the CombinedForm utilitiy class."""
 import datetime
 import unittest
-from unittest import mock
+import unittest.mock
 
+import django.forms
+import django.models
 import django.test
 import django.utils.timezone
-from django import forms
-from django.db import models
 
 import combinedform
 
@@ -18,14 +18,14 @@ class CombinedFormTest(unittest.TestCase):
         """Test that the `keys` method works as expected."""
 
         class MyCombinedForm(combinedform.CombinedForm):
-            form1 = combinedform.Subform(mock.MagicMock)
+            form1 = combinedform.Subform(unittest.mock.MagicMock)
 
         inst = MyCombinedForm()
         self.assertEqual(list(inst.keys()), ['form1'])
 
     def test_subform_arguments(self):
         """subform__arg will get sent to the right subform."""
-        subform_mock = mock.MagicMock()
+        subform_mock = unittest.mock.MagicMock()
 
         class MyCombinedForm(combinedform.CombinedForm):
             form1 = combinedform.Subform(subform_mock)
@@ -35,8 +35,8 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_subform_arguments_not_sent_elsewhere(self):
         """A subform argument doesn't get sent to an unintended subform."""
-        subform_a = mock.MagicMock()
-        subform_b = mock.MagicMock()
+        subform_a = unittest.mock.MagicMock()
+        subform_b = unittest.mock.MagicMock()
 
         class Combined(combinedform.CombinedForm):
             form1 = combinedform.Subform(subform_a)
@@ -47,8 +47,8 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_global_args(self):
         """Arguments get sent to all subforms."""
-        subform_a = mock.MagicMock()
-        subform_b = mock.MagicMock()
+        subform_a = unittest.mock.MagicMock()
+        subform_b = unittest.mock.MagicMock()
 
         class Combined(combinedform.CombinedForm):
             form1 = combinedform.Subform(subform_a)
@@ -60,9 +60,9 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_errors(self):
         """errors collects subform errors."""
-        subform_a = mock.MagicMock()
+        subform_a = unittest.mock.MagicMock()
         subform_a().errors = {'foo_field': 'Not enough bars'}
-        subform_b = mock.MagicMock()
+        subform_b = unittest.mock.MagicMock()
         subform_b().errors = {'bar_field': 'Not enough foos'}
 
         class Combined(combinedform.CombinedForm):
@@ -99,7 +99,7 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_combinedform_validators_called(self):
         """Validators for the completed formset get called."""
-        validate_stuff = mock.MagicMock()
+        validate_stuff = unittest.mock.MagicMock()
 
         class Form(combinedform.CombinedForm):
             validators = [validate_stuff]
@@ -108,7 +108,8 @@ class CombinedFormTest(unittest.TestCase):
         inst.forms_valid()
         validate_stuff.assert_called_with(inst)
 
-        validator1, validator2 = mock.MagicMock(), mock.MagicMock()
+        validator1 = unittest.mock.MagicMock()
+        validator2 = unittest.mock.MagicMock()
 
         class Form2(combinedform.CombinedForm):
             validators = [validator1, validator2]
@@ -129,7 +130,8 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_validator_raises_means_forms_invalid(self):
         """When a validator raises ValidationError, forms_valid() is False."""
-        validator = mock.MagicMock(side_effect=forms.ValidationError("Invalid"))
+        error = django.forms.ValidationError("Invalid")
+        validator = unittest.mock.MagicMock(side_effect=error)
 
         class Combined(combinedform.CombinedForm):
             validators = [validator]
@@ -139,7 +141,8 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_validator_exceptions_added_to_errorlist(self):
         """When a validator raises ValidationError, its message is stored."""
-        validator = mock.MagicMock(side_effect=forms.ValidationError("Invalid"))
+        error = django.forms.ValidationError("Invalid")
+        validator = unittest.mock.MagicMock(side_effect=error)
 
         class Combined(combinedform.CombinedForm):
             validators = [validator]
@@ -150,7 +153,7 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_iterator_returns_keys(self):
         """The iterator yields the subform names."""
-        form_a = mock.MagicMock()
+        form_a = unittest.mock.MagicMock()
 
         class Combined(combinedform.CombinedForm):
             form1 = combinedform.Subform(form_a)
@@ -158,7 +161,7 @@ class CombinedFormTest(unittest.TestCase):
         iter_vals = list(iter(Combined()))
         self.assertEqual(iter_vals, ['form1'])
 
-        form_b = mock.MagicMock()
+        form_b = unittest.mock.MagicMock()
 
         class Combined2(combinedform.CombinedForm):
             form1 = combinedform.Subform(form_a)
@@ -169,7 +172,7 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_subforms_valid(self):
         """subforms_valid() is True if all subforms are valid."""
-        subform_a = mock.MagicMock()
+        subform_a = unittest.mock.MagicMock()
         subform_a.is_valid.return_value = True
 
         class Combined(combinedform.CombinedForm):
@@ -179,7 +182,7 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_invalid_subform_subforms_invalid(self):
         """subforms_valid() is False if a subform is invalid."""
-        subform_a = mock.MagicMock()
+        subform_a = unittest.mock.MagicMock()
         subform_a().is_valid.return_value = False
 
         class Combined(combinedform.CombinedForm):
@@ -191,28 +194,29 @@ class CombinedFormTest(unittest.TestCase):
         """is_valid() is True if subforms and CombinedForm are both valid."""
 
         class Combined(combinedform.CombinedForm):
-            validators = [mock.MagicMock()]
-            form1 = combinedform.Subform(mock.MagicMock())
+            validators = [unittest.mock.MagicMock()]
+            form1 = combinedform.Subform(unittest.mock.MagicMock())
 
         self.assertTrue(Combined().is_valid())
 
     def test_is_valid_false_on_bad_validator(self):
         """is_valid() is False if CombinedForm validator is false."""
+        error = django.forms.ValidationError('a')
 
         class Combined(combinedform.CombinedForm):
             validators = [
-                mock.MagicMock(side_effect=forms.ValidationError('a'))]
-            form1 = combinedform.Subform(mock.MagicMock())
+                unittest.mock.MagicMock(side_effect=error)]
+            form1 = combinedform.Subform(unittest.mock.MagicMock())
 
         self.assertFalse(Combined().is_valid())
 
     def test_is_valid_false_on_bad_subform(self):
         """is_valid() is False if a subform's is_valid() is False."""
-        subform = mock.MagicMock()
+        subform = unittest.mock.MagicMock()
         subform().is_valid.return_value = False
 
         class Combined(combinedform.CombinedForm):
-            validators = [mock.MagicMock()]
+            validators = [unittest.mock.MagicMock()]
             form1 = combinedform.Subform(subform)
 
         self.assertFalse(Combined().is_valid())
@@ -227,7 +231,7 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_non_field_errors_gets_subform_errors(self):
         """non_field_errors gets all nonfield errors from subforms."""
-        subform = mock.MagicMock()
+        subform = unittest.mock.MagicMock()
         subform().non_field_errors.return_value = ['foo']
 
         class Combined(combinedform.CombinedForm):
@@ -274,7 +278,7 @@ class CombinedFormTest(unittest.TestCase):
 
     def test_non_field_errors_gets_formsets(self):
         """non_field_errors can handle formsets."""
-        formset = mock.MagicMock()
+        formset = unittest.mock.MagicMock()
         del formset().non_field_errors
         formset().non_form_errors.return_value = ['foo']
 
@@ -312,16 +316,16 @@ class CombinedFormTest(unittest.TestCase):
     def test_empty_formset_doesnt_propgate_empty_errors(self):
         """A formset with no errors returns an empty error result."""
 
-        class MyModel(models.Model):
-            a = models.CharField(max_length=10)
-            b = models.CharField(max_length=10)
+        class MyModel(django.models.Model):
+            a = django.models.CharField(max_length=10)
+            b = django.models.CharField(max_length=10)
 
-        class MyForm(forms.ModelForm):
+        class MyForm(django.forms.ModelForm):
             class Meta:
                 model = MyModel
                 fields = ('b',)
 
-        MyFormSet = forms.formsets.formset_factory(MyForm)
+        MyFormSet = django.forms.formsets.formset_factory(MyForm)
         data = {'form-0-b': '1', 'form-1-b': '2', 'form-1-b': '3',
                 'form-INITIAL_FORMS': '0', 'form-TOTAL_FORMS': '3',
                 'form-MAX_NUM_FORMS': '1000'}
@@ -375,20 +379,20 @@ class OrderByDependencyTest(unittest.TestCase):
     def test_basic_foreignkey(self):
         """Properly orders a basic foreign key relationship."""
 
-        class Model1(models.Model):
+        class Model1(django.models.Model):
             pass
 
-        class Model2(models.Model):
-            m1 = models.ForeignKey(Model1)
+        class Model2(django.models.Model):
+            m1 = django.models.ForeignKey(Model1)
 
         result = combinedform.order_by_dependency([Model2, Model1])
         self.assertEqual(self.stringify(result), "1 2")
 
-        class Model3(models.Model):
+        class Model3(django.models.Model):
             pass
 
-        class Model4(models.Model):
-            m3 = models.ForeignKey(Model3)
+        class Model4(django.models.Model):
+            m3 = django.models.ForeignKey(Model3)
 
         result = combinedform.order_by_dependency([Model3, Model4])
         self.assertEqual(self.stringify(result), "3 4")
@@ -396,17 +400,26 @@ class OrderByDependencyTest(unittest.TestCase):
     def test_second_level_fks(self):
         """Test a set of foreign key relations two levels deep."""
 
-        class Model01(models.Model):            # A visual:
-            pass                                #
+        """Visual of the model relationships in this test:
 
-        class Model02(models.Model):            # m4
-            m1 = models.ForeignKey(Model01)     #  \
+        m4
+         \
+          m2   m3
+           \  /
+            m1
 
-        class Model03(models.Model):            #   m2   m3
-            m1 = models.ForeignKey(Model01)     #    \  /
+        """
+        class Model01(django.models.Model):
+            pass
 
-        class Model04(models.Model):            #     m1
-            m2 = models.ForeignKey(Model02)
+        class Model02(django.models.Model):
+            m1 = django.models.ForeignKey(Model01)
+
+        class Model03(django.models.Model):
+            m1 = django.models.ForeignKey(Model01)
+
+        class Model04(django.models.Model):
+            m2 = django.models.ForeignKey(Model02)
 
         result = combinedform.order_by_dependency(
             [Model03, Model02, Model04, Model01])
@@ -419,30 +432,41 @@ class OrderByDependencyTest(unittest.TestCase):
     def test_ignores_externals(self):
         """The ordering doesn't account for models not given as arguments."""
 
-        class Model001(models.Model):           # A visual:
-            pass                                #
+        """Visual of the model relationships in this test:
 
-        class Model002(models.Model):           # m1   m2
-            pass                                #  \  /
+        m1   m2
+         \  /
 
-        class Model003(models.Model):           #   m3
-            m1 = models.ForeignKey(Model001)    #   /
-            m2 = models.ForeignKey(Model002)    # m4
+          m3
+          /
+        m4
 
-        class Model004(models.Model):
-            m3 = models.ForeignKey(Model003)
+        """
+
+        class Model001(django.models.Model):
+            pass
+
+        class Model002(django.models.Model):
+            pass
+
+        class Model003(django.models.Model):
+            m1 = django.models.ForeignKey(Model001)
+            m2 = django.models.ForeignKey(Model002)
+
+        class Model004(django.models.Model):
+            m3 = django.models.ForeignKey(Model003)
 
         # add extra models to artifically add depth to Model3 that's not
         # relevant for the subgraph we're interested in; test if it is properly
         # ignored
-        class ModelA(models.Model):
-            m3 = models.ForeignKey(Model003)
+        class ModelA(django.models.Model):
+            m3 = django.models.ForeignKey(Model003)
 
-        class ModelB(models.Model):
-            ma = models.ForeignKey(ModelA)
+        class ModelB(django.models.Model):
+            ma = django.models.ForeignKey(ModelA)
 
-        class ModelC(models.Model):
-            mb = models.ForeignKey(ModelB)
+        class ModelC(django.models.Model):
+            mb = django.models.ForeignKey(ModelB)
 
         result = combinedform.order_by_dependency(
             [Model003, Model002, Model004, Model001])
@@ -455,38 +479,36 @@ class CombinedFormIntegrationTest(django.test.TestCase):
 
     def test_dependency_saving(self):
         """Test models are saved in a safe order and properly linked."""
-        from django.db.models import CharField
-        from django.forms import ModelForm
-        from django.forms.models import inlineformset_factory
 
-        class ModelFoo(models.Model):
-            description = CharField(max_length=20)
+        class ModelFoo(django.models.Model):
+            description = django.models.CharField(max_length=20)
 
-        class ModelBar(models.Model):
-            name = CharField(max_length=20)
-            foo = models.ForeignKey(ModelFoo)
+        class ModelBar(django.models.Model):
+            name = django.models.CharField(max_length=20)
+            foo = django.models.ForeignKey(ModelFoo)
 
-        class ModelBuzz(models.Model):
-            title = CharField(max_length=20)
-            bar = models.ForeignKey(ModelBar)
+        class ModelBuzz(django.models.Model):
+            title = django.models.CharField(max_length=20)
+            bar = django.models.ForeignKey(ModelBar)
 
-        class FooForm(ModelForm):
+        class FooForm(django.forms.ModelForm):
             class Meta:
                 model = ModelFoo
                 fields = ('description',)
 
-        class BarForm(ModelForm):
+        class BarForm(django.forms.ModelForm):
             class Meta:
                 model = ModelBar
                 fields = ('name',)
 
-        class BuzzForm(ModelForm):
+        class BuzzForm(django.forms.ModelForm):
             class Meta:
                 model = ModelBuzz
                 fields = ('title',)
 
-        BuzzFormset = inlineformset_factory(ModelBar, ModelBuzz, form=BuzzForm,
-                                            can_delete=False)
+        fset_factory = django.forms.models.intlineformset_factory
+        BuzzFormset = fset_factory(ModelBar, ModelBuzz, form=BuzzForm,
+                                   can_delete=False)
 
         class TheForm(combinedform.CombinedForm):
             # models are given backwards just to ensure it doesn't accidentally
@@ -504,7 +526,7 @@ class CombinedFormIntegrationTest(django.test.TestCase):
         inst = TheForm(formdata)
         self.assertTrue(inst.is_valid())
 
-        saved = inst.save(commit=False) # can't do a real save on above models
+        saved = inst.save(commit=False)  # can't do a real save on above models
         buzz = saved['buzz'][0]
         self.assertIsInstance(buzz, ModelBuzz)
         self.assertEqual(buzz.title, 'yo')
@@ -519,8 +541,8 @@ class MainFormTest(unittest.TestCase):
 
     def mockmodelform(self):
         """Make a mock ModelForm."""
-        form = mock.MagicMock(spec=forms.ModelForm)
-        model = mock.MagicMock(spec=models.Model)
+        form = unittest.mock.MagicMock(spec=django.forms.ModelForm)
+        model = unittest.mock.MagicMock(spec=django.models.Model)
         form.return_value.save.return_value = model
         return form
 
