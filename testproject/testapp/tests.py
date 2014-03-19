@@ -3,8 +3,8 @@ import datetime
 import unittest
 import unittest.mock
 
+import django.db.models
 import django.forms
-import django.models
 import django.test
 import django.utils.timezone
 
@@ -316,9 +316,9 @@ class CombinedFormTest(unittest.TestCase):
     def test_empty_formset_doesnt_propgate_empty_errors(self):
         """A formset with no errors returns an empty error result."""
 
-        class MyModel(django.models.Model):
-            a = django.models.CharField(max_length=10)
-            b = django.models.CharField(max_length=10)
+        class MyModel(django.db.models.Model):
+            a = django.db.models.CharField(max_length=10)
+            b = django.db.models.CharField(max_length=10)
 
         class MyForm(django.forms.ModelForm):
             class Meta:
@@ -379,20 +379,20 @@ class OrderByDependencyTest(unittest.TestCase):
     def test_basic_foreignkey(self):
         """Properly orders a basic foreign key relationship."""
 
-        class Model1(django.models.Model):
+        class Model1(django.db.models.Model):
             pass
 
-        class Model2(django.models.Model):
-            m1 = django.models.ForeignKey(Model1)
+        class Model2(django.db.models.Model):
+            m1 = django.db.models.ForeignKey(Model1)
 
         result = combinedform.order_by_dependency([Model2, Model1])
         self.assertEqual(self.stringify(result), "1 2")
 
-        class Model3(django.models.Model):
+        class Model3(django.db.models.Model):
             pass
 
-        class Model4(django.models.Model):
-            m3 = django.models.ForeignKey(Model3)
+        class Model4(django.db.models.Model):
+            m3 = django.db.models.ForeignKey(Model3)
 
         result = combinedform.order_by_dependency([Model3, Model4])
         self.assertEqual(self.stringify(result), "3 4")
@@ -409,17 +409,17 @@ class OrderByDependencyTest(unittest.TestCase):
             m1
 
         """
-        class Model01(django.models.Model):
+        class Model01(django.db.models.Model):
             pass
 
-        class Model02(django.models.Model):
-            m1 = django.models.ForeignKey(Model01)
+        class Model02(django.db.models.Model):
+            m1 = django.db.models.ForeignKey(Model01)
 
-        class Model03(django.models.Model):
-            m1 = django.models.ForeignKey(Model01)
+        class Model03(django.db.models.Model):
+            m1 = django.db.models.ForeignKey(Model01)
 
-        class Model04(django.models.Model):
-            m2 = django.models.ForeignKey(Model02)
+        class Model04(django.db.models.Model):
+            m2 = django.db.models.ForeignKey(Model02)
 
         result = combinedform.order_by_dependency(
             [Model03, Model02, Model04, Model01])
@@ -443,30 +443,30 @@ class OrderByDependencyTest(unittest.TestCase):
 
         """
 
-        class Model001(django.models.Model):
+        class Model001(django.db.models.Model):
             pass
 
-        class Model002(django.models.Model):
+        class Model002(django.db.models.Model):
             pass
 
-        class Model003(django.models.Model):
-            m1 = django.models.ForeignKey(Model001)
-            m2 = django.models.ForeignKey(Model002)
+        class Model003(django.db.models.Model):
+            m1 = django.db.models.ForeignKey(Model001)
+            m2 = django.db.models.ForeignKey(Model002)
 
-        class Model004(django.models.Model):
-            m3 = django.models.ForeignKey(Model003)
+        class Model004(django.db.models.Model):
+            m3 = django.db.models.ForeignKey(Model003)
 
         # add extra models to artifically add depth to Model3 that's not
         # relevant for the subgraph we're interested in; test if it is properly
         # ignored
-        class ModelA(django.models.Model):
-            m3 = django.models.ForeignKey(Model003)
+        class ModelA(django.db.models.Model):
+            m3 = django.db.models.ForeignKey(Model003)
 
-        class ModelB(django.models.Model):
-            ma = django.models.ForeignKey(ModelA)
+        class ModelB(django.db.models.Model):
+            ma = django.db.models.ForeignKey(ModelA)
 
-        class ModelC(django.models.Model):
-            mb = django.models.ForeignKey(ModelB)
+        class ModelC(django.db.models.Model):
+            mb = django.db.models.ForeignKey(ModelB)
 
         result = combinedform.order_by_dependency(
             [Model003, Model002, Model004, Model001])
@@ -480,16 +480,16 @@ class CombinedFormIntegrationTest(django.test.TestCase):
     def test_dependency_saving(self):
         """Test models are saved in a safe order and properly linked."""
 
-        class ModelFoo(django.models.Model):
-            description = django.models.CharField(max_length=20)
+        class ModelFoo(django.db.models.Model):
+            description = django.db.models.CharField(max_length=20)
 
-        class ModelBar(django.models.Model):
-            name = django.models.CharField(max_length=20)
-            foo = django.models.ForeignKey(ModelFoo)
+        class ModelBar(django.db.models.Model):
+            name = django.db.models.CharField(max_length=20)
+            foo = django.db.models.ForeignKey(ModelFoo)
 
-        class ModelBuzz(django.models.Model):
-            title = django.models.CharField(max_length=20)
-            bar = django.models.ForeignKey(ModelBar)
+        class ModelBuzz(django.db.models.Model):
+            title = django.db.models.CharField(max_length=20)
+            bar = django.db.models.ForeignKey(ModelBar)
 
         class FooForm(django.forms.ModelForm):
             class Meta:
@@ -506,7 +506,7 @@ class CombinedFormIntegrationTest(django.test.TestCase):
                 model = ModelBuzz
                 fields = ('title',)
 
-        fset_factory = django.forms.models.intlineformset_factory
+        fset_factory = django.forms.models.inlineformset_factory
         BuzzFormset = fset_factory(ModelBar, ModelBuzz, form=BuzzForm,
                                    can_delete=False)
 
@@ -542,7 +542,7 @@ class MainFormTest(unittest.TestCase):
     def mockmodelform(self):
         """Make a mock ModelForm."""
         form = unittest.mock.MagicMock(spec=django.forms.ModelForm)
-        model = unittest.mock.MagicMock(spec=django.models.Model)
+        model = unittest.mock.MagicMock(spec=django.db.models.Model)
         form.return_value.save.return_value = model
         return form
 
