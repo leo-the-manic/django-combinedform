@@ -4,6 +4,7 @@ import unittest
 from unittest import mock
 
 import django.test
+import django.utils.timezone
 from django import forms
 from django.db import models
 
@@ -258,10 +259,17 @@ class CombinedFormTest(unittest.TestCase):
 
         f = MyForm2({'event-time': '4/5/2010 3:30'})
         self.assertTrue(f.is_valid(), f.errors)
+
+        expected_time = datetime.datetime(year=2010, month=4, day=5, hour=3,
+                                          minute=30)
+
+        # django attaches a tz so attach to expected data, too
+        tz = django.utils.timezone
+        expected_time = tz.make_aware(expected_time, tz.get_default_timezone())
         expected_data = {
-            'event-time': datetime.datetime(year=2010, month=5, day=4, hour=3,
-                                            minute=30)
+            'event-time': expected_time,
         }
+
         self.assertEqual(expected_data, f.cleaned_data)
 
     def test_non_field_errors_gets_formsets(self):
