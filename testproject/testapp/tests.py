@@ -253,7 +253,7 @@ class CombinedFormTest(unittest.TestCase):
 
         f = MyForm({'yesno-val': 'Yes'})
         self.assertTrue(f.is_valid(), f.errors)
-        self.assertEqual({'yesno-val': True}, f.cleaned_data)
+        self.assertEqual({'yesno': {'val': True}}, f.cleaned_data)
 
         class TimeForm(django.forms.Form):
             time = django.forms.DateTimeField()
@@ -271,7 +271,7 @@ class CombinedFormTest(unittest.TestCase):
         tz = django.utils.timezone
         expected_time = tz.make_aware(expected_time, tz.get_default_timezone())
         expected_data = {
-            'event-time': expected_time,
+            'event': {'time': expected_time},
         }
 
         self.assertEqual(expected_data, f.cleaned_data)
@@ -286,7 +286,7 @@ class CombinedFormTest(unittest.TestCase):
 
         combined = MyCombined({'my_field': 'foo'})
         assert combined.is_valid()
-        self.assertEqual({'my_field': 'foo'}, combined.cleaned_data)
+        self.assertEqual({'form': {'my_field': 'foo'}}, combined.cleaned_data)
 
     def test_non_field_errors_gets_formsets(self):
         """non_field_errors can handle formsets."""
