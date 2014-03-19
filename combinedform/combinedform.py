@@ -11,7 +11,6 @@ from django import utils
 
 class SubformError(Exception):
     """An error occured when interacting with a subform."""
-    pass
 
 
 class FieldValidationError(Exception):
@@ -67,7 +66,15 @@ class Subform(object):
 
     @property
     def prefix(self):
-        return self.kwargs['prefix']
+        """Get this subform's prefix.
+
+        Returns an empty string if the subform has no prefix.
+
+        """
+        try:
+            return self.kwargs['prefix']
+        except KeyError:
+            return ''
 
 
 class CombinedFormMetaclass(type):
@@ -371,12 +378,15 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
             # cleaned data from subforms come back without any prefix, so
             # manually reattach
             subform_data = self[subform_name].cleaned_data
+
+            # prefix may be an empty string
             subform_prefix = getattr(type(self), subform_name).prefix
 
-            def prefixed(s):
-                return subform_prefix + "-" + s
+            if subform_prefix:
+                subform_prefix += '-'
 
-            prefixed_data = {prefixed(k): v for k, v in subform_data.items()}
+            prefixed_data = {(subform_prefix + k): v for k, v in
+                             subform_data.items()}
             combined_data.update(prefixed_data)
 
         return combined_data

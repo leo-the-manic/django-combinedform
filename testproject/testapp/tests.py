@@ -276,6 +276,18 @@ class CombinedFormTest(unittest.TestCase):
 
         self.assertEqual(expected_data, f.cleaned_data)
 
+    def test_cleaneddata_without_prefix(self):
+        """cleaned_data operates on prefix-less subforms."""
+        class MyForm(django.forms.Form):
+            my_field = django.forms.CharField()
+
+        class MyCombined(combinedform.CombinedForm):
+            form = combinedform.Subform(MyForm)
+
+        combined = MyCombined({'my_field': 'foo'})
+        assert combined.is_valid()
+        self.assertEqual({'my_field': 'foo'}, combined.cleaned_data)
+
     def test_non_field_errors_gets_formsets(self):
         """non_field_errors can handle formsets."""
         formset = unittest.mock.MagicMock()
