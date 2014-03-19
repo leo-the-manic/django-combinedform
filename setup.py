@@ -16,5 +16,5 @@ setuptools.setup(
     name="django-combinedforms",
     packages=['combinedform'],
     url="https://github.com/leo-the-manic/django-combinedform",
-    version="0.1.1",
+    version="0.1.2",
 )
