@@ -288,6 +288,28 @@ class CombinedFormTest(unittest.TestCase):
         assert combined.is_valid()
         self.assertEqual({'form': {'my_field': 'foo'}}, combined.cleaned_data)
 
+
+    def test_initial_distributes_to_subforms(self):
+        """The 'initial' kwarg of __init__ takes a nested dict."""
+        class Form1(django.forms.Form):
+            foo = django.forms.CharField()
+
+        class Form2(django.forms.Form):
+            foo = django.forms.CharField()
+
+        class Formset(combinedform.CombinedForm):
+            form1 = combinedform.Subform(Form1)
+            form2 = combinedform.Subform(Form2)
+
+        initial_data = {
+            'form1': {'foo': 'form1 foo'},
+            'form2': {'foo': 'form2 foo'},
+        }
+
+        fset = Formset(initial=initial_data)
+        self.assertEqual({'foo': 'form1 foo'}, fset.form1.initial)
+        self.assertEqual({'foo': 'form2 foo'}, fset.form2.initial)
+
     def test_non_field_errors_gets_formsets(self):
         """non_field_errors can handle formsets."""
         formset = unittest.mock.MagicMock()

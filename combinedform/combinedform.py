@@ -157,6 +157,21 @@ def extract_subform_args(raw_kwargs, subform_names):
     return dict(subform_args)
 
 
+def add_initial_args(initial, arg_dict):
+    """Sort subform data from ``initial`` into ``arg_dict``
+
+    ``arg_dict`` is a dict in the format returned by
+    :func:`extract_subform_args`
+
+    :returns: None
+
+    """
+    for subform, subform_initial in initial.items():
+        if not subform in arg_dict:
+            arg_dict[subform] = {}
+        arg_dict[subform]['initial'] = subform_initial
+
+
 # copied from recent Django source on Github
 def add_error(form, error):
     """
@@ -237,7 +252,7 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
 
     validators = tuple()  # default to no validators
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, initial=None, **kwargs):
         """Construct all subforms.
 
         Passes ``*args`` and ``**kwargs`` to all subforms, except for
@@ -257,9 +272,21 @@ class CombinedForm(object, metaclass=CombinedFormMetaclass):
 
             SubformConstructor(arg='val')
 
-        """
+        :type  initial: dict
+        :param initial:
+            A dict from subform names to subform initial args. An initial dict
+            of::
 
+                {'a' {'foo': 'bar'}, 'b': {'fizz': 'buzz'}}
+
+            is equivalent to calling the constructor with::
+
+                YourCombinedForm(a__initial={'foo': 'bar'},
+                                 b__initial={'fizz': 'buzz'})
+
+        """
         subform_args = extract_subform_args(kwargs, list(self.keys()))
+        add_initial_args(initial or {}, subform_args)
 
         for subform_name in list(self.keys()):
             # check if we need to send subform args
